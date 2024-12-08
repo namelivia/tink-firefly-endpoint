@@ -3,9 +3,7 @@ on:
   workflow_dispatch:
   push:
     branches:
-      - main
-    tags:
-      - '*'
+      - debug_mode
 jobs:
   setup:
     runs-on: ubuntu-latest
@@ -29,12 +27,12 @@ jobs:
           builder: ${{ steps.development_builder.outputs.name }}
           target: development
           load: true
-          tags: tink-firefly-endpoint-testing:latest
+          tags: tink-firefly-endpoint-testing:debug_mode
       - 
         name: Run tests
         uses: addnab/docker-run-action@v1
         with:
-          image: tink-firefly-endpoint-testing:latest
+          image: tink-firefly-endpoint-testing:debug_mode
           shell: sh 
           run: sh /app/run_tests_ci ${{ github.sha }} ${{ secrets.CODECOV_TOKEN }}
   deploy:
@@ -70,4 +68,4 @@ jobs:
           push: true
           builder: ${{ steps.production_builder.outputs.name }}
           target: production
-          tags: namelivia/tink-firefly-endpoint:${{ env.TAG }}
+          tags: namelivia/tink-firefly-endpoint:debug_mode
