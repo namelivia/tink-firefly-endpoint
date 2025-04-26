@@ -1,5 +1,5 @@
 # TODO: I've been unable to make this work with alpine because of problems with pybind11
-FROM python:3.12 AS builder
+FROM python:3.10 AS builder
 WORKDIR /app
 COPY . /app
 RUN pip install poetry
