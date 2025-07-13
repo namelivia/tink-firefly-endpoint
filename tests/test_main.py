@@ -4,13 +4,10 @@ from unittest.mock import Mock
 from datetime import datetime
 
 from app.utils.utils import (
-    _get_transaction_date,
-    _date_before_target,
     _iterate_transactions,
 )
 from app.utils.transaction_processor_utils import (
     _get_provider_transaction_id,
-    add_transaction_to_summary,
 )
 from app.summary.summary import Summary
 from dataclass_map_and_log.mapper import DataclassMapper
@@ -38,14 +35,19 @@ class TestApp:
         assert _get_provider_transaction_id(mock_transaction) == ""
 
     def test_iterating_transactions(self):
+        # Load the stub data for a transactions page from 'transaction_page.json'
         stub_data = self._get_stub_contents("transaction_page.json")
         account_id = "test_account"
         tink = Mock()
         writer = Mock()
         date_until = datetime.strptime("2020-12-13", "%Y-%m-%d")
         tink.transactions.return_value.get.return_value = stub_data
+
+        # Call the _iterate_transactions function with the mock objects
         _iterate_transactions(account_id, writer, date_until, tink, None)
         tink.transactions.return_value.get.assert_called_once_with(pageToken=None)
+
+        # Ensure the summary contains the extracted transactions
         summary = Summary().get()
         assert len(summary) == 1
         assert summary[0] == {
