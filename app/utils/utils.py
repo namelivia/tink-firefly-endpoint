@@ -4,6 +4,7 @@ import logging
 from app.utils.transaction_processor_utils import (
     add_transaction_to_summary,
     write_transaction_to_csv,
+    fix_transaction,
 )
 
 logger = logging.getLogger(__name__)
@@ -19,10 +20,13 @@ def _date_before_target(transaction, target_date):
 
 
 ### UNTESTED
+
+
 def _process_transaction(account_id, writer, transaction):
     # This function will add an entry of the transaction to the csv file and the summary
-    write_transaction_to_csv(account_id, writer, transaction)
-    add_transaction_to_summary(transaction)
+    fixed_transaction = fix_transaction(transaction)
+    write_transaction_to_csv(account_id, writer, fixed_transaction)
+    add_transaction_to_summary(fixed_transaction)
 
 
 def process_transactions_page(account_id, writer, target_date, transactions_page):

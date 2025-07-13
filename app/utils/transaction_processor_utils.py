@@ -12,6 +12,13 @@ def _get_transaction_date(transaction):
     return transaction.dates.value
 
 
+def fix_transaction(transaction):
+    # Some fixes need to be applied to the transaction
+    # before it can be written.
+    fixed_transaction = transaction
+    return fixed_transaction
+
+
 def add_transaction_to_summary(transaction):
     Summary().add(
         {
