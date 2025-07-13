@@ -1,4 +1,5 @@
 from jinja2 import Template
+import csv
 from app.summary.summary import Summary
 import logging
 from app.utils.transaction_processor_utils import (
@@ -20,13 +21,25 @@ def _date_before_target(transaction, target_date):
 
 
 ### UNTESTED
-
-
 def _process_transaction(account_id, writer, transaction):
     # This function will add an entry of the transaction to the csv file and the summary
     fixed_transaction = fix_transaction(transaction)
     write_transaction_to_csv(account_id, writer, fixed_transaction)
     add_transaction_to_summary(fixed_transaction)
+
+
+def write_csv_file(account_id, tink, date_until, output_path, current_timestamp):
+    page = None
+    stop = False
+    file_name = f"{output_path}/output_{current_timestamp}.csv"
+    with open(file_name, "w") as f:
+        writer = csv.writer(f, delimiter=";")
+        while not stop:
+            transactions_page = tink.transactions().get(pageToken=page)
+            stop = process_transactions_page(
+                account_id, writer, date_until, transactions_page
+            )
+            page = transactions_page.next_page_token
 
 
 def process_transactions_page(account_id, writer, target_date, transactions_page):

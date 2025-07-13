@@ -1,11 +1,10 @@
 import os
-import csv
 import sys
 import time
 from datetime import datetime
 from app.storage.storage import TokenStorage
 from app.summary.summary import Summary
-from app.utils.utils import process_transactions_page, write_configuration_file
+from app.utils.utils import write_csv_file, write_configuration_file
 from tink_http_python.tink import Tink
 from tink_http_python.exceptions import NoAuthorizationCodeException
 from tink_http_python.transactions import Transactions
@@ -58,21 +57,9 @@ def read_root(
         storage=storage,
     )
 
-    # Create the CSV file
-    page = None
-    stop = False
-    current_timestamp = int(time.time())
     output_path = os.environ.get("CSV_PATH")
-    file_name = f"{output_path}/output_{current_timestamp}.csv"
-    with open(file_name, "w") as f:
-        writer = csv.writer(f, delimiter=";")
-        while not stop:
-            transactions_page = tink.transactions().get(pageToken=page)
-            stop = process_transactions_page(
-                account_id, writer, date_until, transactions_page
-            )
-            page = transactions_page.next_page_token
-    # Create the configuration file
+    current_timestamp = int(time.time())
+    write_csv_file(account_id, tink, date_until, output_path, current_timestamp)
     write_configuration_file(account_id, output_path, current_timestamp)
     return {"Status": "OK", "Summary": Summary().get()}
 
