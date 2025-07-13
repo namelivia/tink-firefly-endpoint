@@ -7,13 +7,14 @@ from app.utils.transaction_processor_utils import (
     write_transaction_to_csv,
     fix_transaction,
 )
+from datetime import datetime
 
 logger = logging.getLogger(__name__)
 
 
 ### TESTED
 def _get_transaction_date(transaction):
-    return transaction.dates.value
+    return datetime.strptime(transaction.dates.value, "%Y-%m-%d")
 
 
 def _date_before_target(transaction, target_date):
@@ -28,18 +29,22 @@ def _process_transaction(account_id, writer, transaction):
     add_transaction_to_summary(fixed_transaction)
 
 
-def write_csv_file(account_id, tink, date_until, output_path, current_timestamp):
+def _iterate_transactions(account_id, writer, date_until, tink, page):
     page = None
     stop = False
+    while not stop:
+        transactions_page = tink.transactions().get(pageToken=page)
+        stop = process_transactions_page(
+            account_id, writer, date_until, transactions_page
+        )
+        page = transactions_page.next_page_token
+
+
+def write_csv_file(account_id, tink, date_until, output_path, current_timestamp):
     file_name = f"{output_path}/output_{current_timestamp}.csv"
     with open(file_name, "w") as f:
         writer = csv.writer(f, delimiter=";")
-        while not stop:
-            transactions_page = tink.transactions().get(pageToken=page)
-            stop = process_transactions_page(
-                account_id, writer, date_until, transactions_page
-            )
-            page = transactions_page.next_page_token
+        _iterate_transactions(account_id, writer, date_until, tink, None)
 
 
 def process_transactions_page(account_id, writer, target_date, transactions_page):
