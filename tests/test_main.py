@@ -47,6 +47,18 @@ class TestApp:
         _iterate_transactions(account_id, writer, date_until, tink, None)
         tink.transactions.return_value.get.assert_called_once_with(pageToken=None)
 
+        # Ensure the writer was called with the expected arguments
+        writer.writerow.assert_called_once_with(
+            (
+                "test_account",  # Account ID
+                "2020-12-15",  # Transaction date
+                "Tesco",  # Description
+                "d8f37f7d19c240abb4ef5d5dbebae4ef",  # Provider transaction ID
+                -130.0,  # Amount
+                "d8f37f7d19c240abb4ef5d5dbebae4ef",  # Transaction ID
+            )
+        )
+
         # Ensure the summary contains the extracted transactions
         summary = Summary().get()
         assert len(summary) == 1
