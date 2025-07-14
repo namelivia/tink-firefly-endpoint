@@ -1,18 +1,21 @@
 import os
-import csv
 import sys
 import time
 from datetime import datetime
 from app.storage.storage import TokenStorage
+from app.summary.summary import Summary
+from app.utils.utils import (
+    iterate_transactions,
+    save_transactions,
+    write_configuration_file,
+)
 from tink_http_python.tink import Tink
 from tink_http_python.exceptions import NoAuthorizationCodeException
-from tink_http_python.transactions import Transactions
 
 from fastapi import FastAPI, Query, Cookie, HTTPException
 from fastapi.responses import RedirectResponse
 import requests
 import logging
-from jinja2 import Template
 
 app = FastAPI()
 
@@ -39,97 +42,34 @@ def read_root(
     date_until: str = Cookie(default=None),
     account_id: str = Cookie(default=None),
 ):
-    # Store the authorization code
-    storage = TokenStorage()
-    storage.store_new_authorization_code(code)
-
-    try:
-        tink = Tink(
-            client_id=os.environ.get("TINK_CLIENT_ID"),
-            client_secret=os.environ.get("TINK_CLIENT_SECRET"),
-            redirect_uri=os.environ.get("TINK_CALLBACK_URI"),
-            storage=storage,
-        )
-        transactions = tink.transactions().get()
-
-    except NoAuthorizationCodeException:
-        logger.error("No authorization code found")
-        raise HTTPException(status_code=400, detail="No authorization code found")
-    except requests.exceptions.HTTPError as e:
-        logger.error(f"HTTPError: {e}")
-        logger.error(f"Response: {e.response.json()}")
-        logger.error(f"Request data: {e.request.body}")
-        raise HTTPException(status_code=500, detail="Internal server error")
-
+    # Validate input is correct
     if date_until is None:
         raise HTTPException(status_code=400, detail="date_until cookie not found")
 
     if account_id is None:
         raise HTTPException(status_code=400, detail="account_id cookie not found")
 
-    below_target_date = False
-    page_token = None
-    # Generate CSV
-    current_timestamp = int(time.time())
-    csv_path = os.environ.get("CSV_PATH")
-    file_name = f"{csv_path}/output_{current_timestamp}.csv"
-    # For debuggin purposes, log all fields from the first transaction
-    logger.info("First transaction:")
-    logger.info(transactions.transactions[0].__dict__)
-    summary = []
-    with open(file_name, "w") as f:
-        writer = csv.writer(f, delimiter=";")
-        while not below_target_date:
-            for transaction in transactions.transactions:
-                if not below_target_date:
-                    transaction_date = transaction.dates.value
-                    below_target_date = transaction_date < date_until
-                    if below_target_date:
-                        logger.info("Transaction dates below target date, stopping")
-                    else:
-                        provider_transaction_id = (
-                            transaction.identifiers.provider_transaction_id
-                            if transaction.identifiers is not None
-                            else ""
-                        )
-                        writer.writerow(
-                            (
-                                account_id,
-                                transaction_date,
-                                transaction.descriptions.display,
-                                provider_transaction_id,
-                                Transactions.calculate_real_amount(
-                                    transaction.amount.value
-                                ),
-                                transaction.id,
-                            )
-                        )
-                        summary.append(
-                            {
-                                "date": transaction_date,
-                                "description": transaction.descriptions.display,
-                                "amount": Transactions.calculate_real_amount(
-                                    transaction.amount.value
-                                ),
-                            }
-                        )
-            if not below_target_date:
-                logger.info("Transaction dates above target date, continuing")
-                next_page_token = transactions.next_page_token
-                transactions = tink.transactions().get(pageToken=next_page_token)
-    configuration_file_name = f"{csv_path}/output_{current_timestamp}.json"
-    configuration_template_file_name = "templates/importer_configuration.json"
-    with open(configuration_template_file_name, "r") as template_file:
-        template_content = template_file.read()
-    template = Template(template_content)
-    rendered_configuration = template.render(
-        {
-            "default_account_id": account_id,
-        }
+    # Store the authorization code
+    storage = TokenStorage()
+    storage.store_new_authorization_code(code)
+
+    # Initialize the API
+    tink = Tink(
+        client_id=os.environ.get("TINK_CLIENT_ID"),
+        client_secret=os.environ.get("TINK_CLIENT_SECRET"),
+        redirect_uri=os.environ.get("TINK_CALLBACK_URI"),
+        storage=storage,
     )
-    with open(configuration_file_name, "w") as configuration_file:
-        configuration_file.write(rendered_configuration)
-    return {"Status": "OK", "Summary": summary}
+
+    # Get the configuration
+    output_path = os.environ.get("CSV_PATH")
+    current_timestamp = int(time.time())
+
+    # Iterate the transactions and write them to a CSV file
+    fixed_transactions = iterate_transactions(account_id, date_until, tink)
+    save_transactions(account_id, fixed_transactions, output_path, current_timestamp)
+    write_configuration_file(account_id, output_path, current_timestamp)
+    return {"Status": "OK", "Summary": Summary().get()}
 
 
 @app.get("/update")
@@ -152,7 +92,7 @@ def update_account(
             redirect_uri=os.environ.get("TINK_CALLBACK_URI"),
             storage=TokenStorage(),
         )
-        transactions = tink.transactions().get()
+        transactions_page = tink.transactions().get()
     except NoAuthorizationCodeException:
         link = tink.get_authorization_code_link()
     response = RedirectResponse(url=tink.get_authorization_code_link())

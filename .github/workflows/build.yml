@@ -6,6 +6,9 @@ on:
       - main
     tags:
       - '*'
+  pull_request:
+    branches:
+      - main
 jobs:
   setup:
     runs-on: ubuntu-latest
@@ -30,44 +33,64 @@ jobs:
           target: development
           load: true
           tags: tink-firefly-endpoint-testing:latest
-      - 
+      -
         name: Run tests
         uses: addnab/docker-run-action@v1
         with:
           image: tink-firefly-endpoint-testing:latest
-          shell: sh 
+          shell: sh
           run: sh /app/run_tests_ci ${{ github.sha }} ${{ secrets.CODECOV_TOKEN }}
+      -
+        name: Set up production Docker Buildx
+        id: production_builder_test
+        uses: docker/setup-buildx-action@v1
+      -
+        name: Build production container # This is to know that the production build works
+        id: docker_build_test
+        uses: docker/build-push-action@v2
+        with:
+          push: false
+          builder: ${{ steps.production_builder_test.outputs.name }}
+          target: production
+          tags: namelivia/tink-firefly-endpoint:latest
   deploy:
     runs-on: ubuntu-latest
     needs: setup
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/'))
     steps:
-      -
-        name: Set up production Docker Buildx
-        id: production_builder
-        uses: docker/setup-buildx-action@v1
-      -
-        name: Login to DockerHub
-        uses: docker/login-action@v1
-        with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
-      - 
-        name: Determine Docker tag
-        id: docker_tag
-        run: |
-          if [ "${{ github.ref }}" == "refs/heads/main" ]; then
-            echo "TAG=latest" >> $GITHUB_ENV
-          elif [[ "${{ github.ref }}" == refs/tags/* ]]; then
-            VERSION_TAG=${{ github.ref }} 
-            VERSION_TAG=${VERSION_TAG/refs\/tags\//}
-            echo "TAG=${VERSION_TAG}" >> $GITHUB_ENV
-          fi
-      -
-        name: Build and push production container
-        id: docker_build
-        uses: docker/build-push-action@v2
-        with:
-          push: true
-          builder: ${{ steps.production_builder.outputs.name }}
-          target: production
-          tags: namelivia/tink-firefly-endpoint:${{ env.TAG }}
+    -
+      name: Set up production Docker Buildx
+      id: production_builder
+      uses: docker/setup-buildx-action@v1
+    -
+      name: Login to DockerHub
+      uses: docker/login-action@v1
+      with:
+        username: ${{ secrets.DOCKERHUB_USERNAME }}
+        password: ${{ secrets.DOCKERHUB_TOKEN }}
+    -
+      name: Determine Docker tag
+      id: docker_tag
+      run: |
+        REF="${{ github.ref }}"
+        # Check if it's a push to the 'main' branch
+        if [[ "$REF" == "refs/heads/main" ]]; then
+          echo "TAG=latest" >> $GITHUB_ENV
+        # Check if it's a push of a tag
+        elif [[ "$REF" =~ ^refs/tags/ ]]; then
+          TAG_NAME="${REF#refs/tags/}" # Removes 'refs/tags/' prefix
+          echo "TAG=$TAG_NAME" >> $GITHUB_ENV
+        else
+          echo "Error: Unhandled Git reference type: $REF"
+          exit 1
+        fi
+        echo "Determined Docker TAG: ${{ env.TAG }}"
+    -
+      name: Build and push production container
+      uses: docker/build-push-action@v2
+      with:
+        push: true
+        builder: ${{ steps.production_builder.outputs.name }}
+        target: production
+        tags: namelivia/tink-firefly-endpoint:${{ env.TAG }}
+
