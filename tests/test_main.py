@@ -25,15 +25,32 @@ class TestApp:
             data = humps.decamelize(json.load(stub_data))
             return DataclassMapper.map(TransactionsPage, data)
 
-    def test_iterating_and_fixing_transactions(self):
-        # Load the stub data for a transactions page from 'transaction_page.json'
-        stub_data = self._get_stub_contents("transaction_page.json")
+    def test_iterating_and_fixing_transactions_for_some_bank(self):
+        stub_data = self._get_stub_contents("some_bank/transaction_page.json")
         account_id = "32"
         tink = Mock()
         date_until = datetime.strptime("2020-12-13", "%Y-%m-%d")
         tink.transactions.return_value.get.return_value = stub_data
 
-        # Call the _iterate_transactions function with the mock objects
+        fixed_transactions = iterate_transactions(account_id, date_until, tink)
+        tink.transactions.return_value.get.assert_called_once_with(pageToken=None)
+        assert fixed_transactions == [
+            {
+                "amount": -130.0,
+                "date": "2020-12-15",
+                "description": "Tesco",
+                "id": "d8f37f7d19c240abb4ef5d5dbebae4ef",
+                "provider_transaction_id": "d8f37f7d19c240abb4ef5d5dbebae4ef",
+            }
+        ]
+
+    def test_iterating_and_fixing_transactions_for_another_bank(self):
+        stub_data = self._get_stub_contents("another_bank/transaction_page.json")
+        account_id = "17"
+        tink = Mock()
+        date_until = datetime.strptime("2020-12-13", "%Y-%m-%d")
+        tink.transactions.return_value.get.return_value = stub_data
+
         fixed_transactions = iterate_transactions(account_id, date_until, tink)
         tink.transactions.return_value.get.assert_called_once_with(pageToken=None)
         assert fixed_transactions == [
