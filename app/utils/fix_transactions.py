@@ -3,10 +3,16 @@ from abc import ABC, abstractmethod
 from typing import Optional
 
 
-class AccountMiddleware(ABC):
-    def __init__(self, account_id):
-        self.account_id = account_id
+def get_account_middleware(account_id):
+    if account_id == "32":
+        return SomeAccountMiddleware()
+    elif account_id == "17":
+        return AnotherAccountMiddleware()
+    else:
+        raise ValueError(f"Unknown account ID: {account_id}")
 
+
+class AccountMiddleware(ABC):
     @abstractmethod
     def fix_transaction(self, transaction) -> Optional[dict]:
         pass

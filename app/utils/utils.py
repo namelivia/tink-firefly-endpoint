@@ -3,7 +3,7 @@ import csv
 from app.summary.summary import Summary
 import logging
 from app.summary.summary import Summary
-from app.utils.fix_transactions import SomeAccountMiddleware
+from app.utils.fix_transactions import get_account_middleware
 from datetime import datetime
 
 logger = logging.getLogger(__name__)
@@ -29,13 +29,14 @@ def iterate_transactions(account_id, date_until, tink):
 def _process_transactions_page(
     account_id, target_date, fixed_transactions, transactions_page
 ):
-    middleware = SomeAccountMiddleware(account_id)
+    middleware = get_account_middleware(account_id)
     for transaction in transactions_page.transactions:
         fixed_transaction = middleware.fix_transaction(transaction)
-        if _date_before_target(fixed_transaction["date"], target_date):
-            return True, fixed_transactions
-        else:
-            fixed_transactions.append(fixed_transaction)
+        if fixed_transaction is not None:
+            if _date_before_target(fixed_transaction["date"], target_date):
+                return True, fixed_transactions
+            else:
+                fixed_transactions.append(fixed_transaction)
     return False, fixed_transactions
 
 

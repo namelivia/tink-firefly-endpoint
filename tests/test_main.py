@@ -28,7 +28,7 @@ class TestApp:
     def test_iterating_and_fixing_transactions(self):
         # Load the stub data for a transactions page from 'transaction_page.json'
         stub_data = self._get_stub_contents("transaction_page.json")
-        account_id = "test_account"
+        account_id = "32"
         tink = Mock()
         date_until = datetime.strptime("2020-12-13", "%Y-%m-%d")
         tink.transactions.return_value.get.return_value = stub_data
