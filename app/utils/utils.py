@@ -2,9 +2,6 @@ from jinja2 import Template
 import csv
 from app.summary.summary import Summary
 import logging
-from app.utils.csv_utils import (
-    write_transaction_to_csv,
-)
 from app.summary.summary import Summary
 from app.utils.fix_transactions import fix_transaction
 from datetime import datetime
