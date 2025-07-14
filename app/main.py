@@ -6,12 +6,11 @@ from app.storage.storage import TokenStorage
 from app.summary.summary import Summary
 from app.utils.utils import (
     iterate_transactions,
-    write_csv_file,
+    save_transactions,
     write_configuration_file,
 )
 from tink_http_python.tink import Tink
 from tink_http_python.exceptions import NoAuthorizationCodeException
-from tink_http_python.transactions import Transactions
 
 from fastapi import FastAPI, Query, Cookie, HTTPException
 from fastapi.responses import RedirectResponse
