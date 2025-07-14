@@ -1,4 +1,3 @@
-from app.summary.summary import Summary
 from tink_http_python.transactions import Transactions
 
 
@@ -23,26 +22,3 @@ def fix_transaction(transaction):
         "provider_transaction_id": _get_provider_transaction_id(transaction),
     }
     return fixed_transaction
-
-
-def add_transaction_to_summary(transaction):
-    Summary().add(
-        {
-            "date": transaction["date"],
-            "description": transaction["description"],
-            "amount": transaction["amount"],
-        }
-    )
-
-
-def write_transaction_to_csv(account_id, writer, transaction):
-    writer.writerow(
-        (
-            account_id,
-            transaction["date"],
-            transaction["description"],
-            transaction["provider_transaction_id"],
-            transaction["amount"],
-            transaction["id"],
-        )
-    )

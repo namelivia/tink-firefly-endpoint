@@ -4,10 +4,7 @@ from unittest.mock import Mock
 from datetime import datetime
 
 from app.utils.utils import (
-    _iterate_transactions,
-)
-from app.utils.transaction_processor_utils import (
-    _get_provider_transaction_id,
+    iterate_transactions,
 )
 from app.summary.summary import Summary
 from dataclass_map_and_log.mapper import DataclassMapper
@@ -28,13 +25,7 @@ class TestApp:
             data = humps.decamelize(json.load(stub_data))
             return DataclassMapper.map(TransactionsPage, data)
 
-    # TRANSACTION PROCESSOR UTILS
-    def test_getting_the_provider_transaction_id_from_a_transaction(self):
-        # The transaction id is extracted, empty string used as
-        # a fallback.
-        assert _get_provider_transaction_id(mock_transaction) == ""
-
-    def test_iterating_transactions(self):
+    def test_iterating_and_fixing_transactions(self):
         # Load the stub data for a transactions page from 'transaction_page.json'
         stub_data = self._get_stub_contents("transaction_page.json")
         account_id = "test_account"
@@ -44,26 +35,14 @@ class TestApp:
         tink.transactions.return_value.get.return_value = stub_data
 
         # Call the _iterate_transactions function with the mock objects
-        _iterate_transactions(account_id, writer, date_until, tink, None)
+        fixed_transactions = iterate_transactions(account_id, date_until, tink)
         tink.transactions.return_value.get.assert_called_once_with(pageToken=None)
-
-        # Ensure the writer was called with the expected arguments
-        writer.writerow.assert_called_once_with(
-            (
-                "test_account",  # Account ID
-                "2020-12-15",  # Transaction date
-                "Tesco",  # Description
-                "d8f37f7d19c240abb4ef5d5dbebae4ef",  # Provider transaction ID
-                -130.0,  # Amount
-                "d8f37f7d19c240abb4ef5d5dbebae4ef",  # Transaction ID
-            )
-        )
-
-        # Ensure the summary contains the extracted transactions
-        summary = Summary().get()
-        assert len(summary) == 1
-        assert summary[0] == {
-            "amount": -130.0,
-            "date": "2020-12-15",
-            "description": "Tesco",
-        }
+        assert fixed_transactions == [
+            {
+                "amount": -130.0,
+                "date": "2020-12-15",
+                "description": "Tesco",
+                "id": "d8f37f7d19c240abb4ef5d5dbebae4ef",
+                "provider_transaction_id": "d8f37f7d19c240abb4ef5d5dbebae4ef",
+            }
+        ]

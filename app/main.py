@@ -4,7 +4,11 @@ import time
 from datetime import datetime
 from app.storage.storage import TokenStorage
 from app.summary.summary import Summary
-from app.utils.utils import write_csv_file, write_configuration_file
+from app.utils.utils import (
+    iterate_transactions,
+    write_csv_file,
+    write_configuration_file,
+)
 from tink_http_python.tink import Tink
 from tink_http_python.exceptions import NoAuthorizationCodeException
 from tink_http_python.transactions import Transactions
@@ -62,8 +66,9 @@ def read_root(
     output_path = os.environ.get("CSV_PATH")
     current_timestamp = int(time.time())
 
-    # Get the transactions
-    write_csv_file(account_id, tink, date_until, output_path, current_timestamp)
+    # Iterate the transactions and write them to a CSV file
+    fixed_transactions = iterate_transactions(account_id, date_until, tink)
+    save_transactions(account_id, fixed_transactions, output_path, current_timestamp)
     write_configuration_file(account_id, output_path, current_timestamp)
     return {"Status": "OK", "Summary": Summary().get()}
 
