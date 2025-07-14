@@ -30,7 +30,6 @@ class TestApp:
         stub_data = self._get_stub_contents("transaction_page.json")
         account_id = "test_account"
         tink = Mock()
-        writer = Mock()
         date_until = datetime.strptime("2020-12-13", "%Y-%m-%d")
         tink.transactions.return_value.get.return_value = stub_data
 
