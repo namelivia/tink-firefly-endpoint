@@ -45,6 +45,10 @@ def read_root(
     # Validate input is correct
     if date_until is None:
         raise HTTPException(status_code=400, detail="date_until cookie not found")
+    try:
+        formatted_date_until = datetime.strptime(date_until, "%Y-%m-%d")
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Date format is not valid")
 
     if account_id is None:
         raise HTTPException(status_code=400, detail="account_id cookie not found")
@@ -66,7 +70,7 @@ def read_root(
     current_timestamp = int(time.time())
 
     # Iterate the transactions and write them to a CSV file
-    fixed_transactions = iterate_transactions(account_id, date_until, tink)
+    fixed_transactions = iterate_transactions(account_id, formatted_date_until, tink)
     save_transactions(account_id, fixed_transactions, output_path, current_timestamp)
     write_configuration_file(account_id, output_path, current_timestamp)
     return {"Status": "OK", "Summary": Summary().get()}
