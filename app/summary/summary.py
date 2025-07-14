@@ -7,8 +7,14 @@ class Summary:
             cls._instance.data = []
         return cls._instance
 
-    def add(self, item):
-        self.data.append(item)
+    def add(self, transaction):
+        self.data.append(
+            {
+                "date": transaction["date"],
+                "description": transaction["description"],
+                "amount": transaction["amount"],
+            }
+        )
 
     def get(self):
         return self.data
