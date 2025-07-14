@@ -15,29 +15,34 @@ def _get_transaction_date(transaction):
 def fix_transaction(transaction):
     # Some fixes need to be applied to the transaction
     # before it can be written.
-    fixed_transaction = transaction
+    fixed_transaction = {
+        "amount": Transactions.calculate_real_amount(transaction.amount.value),
+        "date": _get_transaction_date(transaction),
+        "description": transaction.descriptions.display,
+        "id": transaction.id,
+        "provider_transaction_id": _get_provider_transaction_id(transaction),
+    }
     return fixed_transaction
 
 
 def add_transaction_to_summary(transaction):
     Summary().add(
         {
-            "date": _get_transaction_date(transaction),
-            "description": transaction.descriptions.display,
-            "amount": Transactions.calculate_real_amount(transaction.amount.value),
+            "date": transaction["date"],
+            "description": transaction["description"],
+            "amount": transaction["amount"],
         }
     )
 
 
 def write_transaction_to_csv(account_id, writer, transaction):
-    transaction_date = _get_transaction_date(transaction)
     writer.writerow(
         (
             account_id,
-            transaction_date,
-            transaction.descriptions.display,
-            _get_provider_transaction_id(transaction),
-            Transactions.calculate_real_amount(transaction.amount.value),
-            transaction.id,
+            transaction["date"],
+            transaction["description"],
+            transaction["provider_transaction_id"],
+            transaction["amount"],
+            transaction["id"],
         )
     )

@@ -12,7 +12,6 @@ from datetime import datetime
 logger = logging.getLogger(__name__)
 
 
-### TESTED
 def _get_transaction_date(transaction):
     return datetime.strptime(transaction.dates.value, "%Y-%m-%d")
 
@@ -21,7 +20,6 @@ def _date_before_target(transaction, target_date):
     return _get_transaction_date(transaction) < target_date
 
 
-### UNTESTED
 def _process_transaction(account_id, writer, transaction):
     # This function will add an entry of the transaction to the csv file and the summary
     fixed_transaction = fix_transaction(transaction)

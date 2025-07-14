@@ -46,10 +46,11 @@ def read_root(
     if account_id is None:
         raise HTTPException(status_code=400, detail="account_id cookie not found")
 
-    # Store the authorization code and initialize the API
+    # Store the authorization code
     storage = TokenStorage()
     storage.store_new_authorization_code(code)
 
+    # Initialize the API
     tink = Tink(
         client_id=os.environ.get("TINK_CLIENT_ID"),
         client_secret=os.environ.get("TINK_CLIENT_SECRET"),
@@ -57,8 +58,11 @@ def read_root(
         storage=storage,
     )
 
+    # Get the configuration
     output_path = os.environ.get("CSV_PATH")
     current_timestamp = int(time.time())
+
+    # Get the transactions
     write_csv_file(account_id, tink, date_until, output_path, current_timestamp)
     write_configuration_file(account_id, output_path, current_timestamp)
     return {"Status": "OK", "Summary": Summary().get()}
