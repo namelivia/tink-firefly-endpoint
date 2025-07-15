@@ -5,9 +5,9 @@ from typing import Optional
 
 def get_account_middleware(account_id):
     if account_id == "32":
-        return SomeAccountMiddleware()
+        return BlueAccountMiddleware()
     elif account_id == "17":
-        return AnotherAccountMiddleware()
+        return RedAccountMiddleware()
     else:
         raise ValueError(f"Unknown account ID: {account_id}")
 
@@ -18,7 +18,7 @@ class AccountMiddleware(ABC):
         pass
 
 
-class SomeAccountMiddleware(AccountMiddleware):
+class BlueAccountMiddleware(AccountMiddleware):
     def _get_provider_transaction_id(self, transaction):
         if transaction.identifiers is not None:
             return transaction.identifiers.provider_transaction_id
@@ -35,7 +35,7 @@ class SomeAccountMiddleware(AccountMiddleware):
         return fixed_transaction
 
 
-class AnotherAccountMiddleware(AccountMiddleware):
+class RedAccountMiddleware(AccountMiddleware):
     def _get_provider_transaction_id(self, transaction):
         if transaction.identifiers is not None:
             return transaction.identifiers.provider_transaction_id

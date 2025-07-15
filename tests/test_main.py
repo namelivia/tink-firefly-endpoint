@@ -25,8 +25,8 @@ class TestApp:
             data = humps.decamelize(json.load(stub_data))
             return DataclassMapper.map(TransactionsPage, data)
 
-    def test_iterating_and_fixing_transactions_for_some_bank(self):
-        stub_data = self._get_stub_contents("some_bank/transaction_page.json")
+    def test_iterating_and_fixing_transactions_for_blue_bank(self):
+        stub_data = self._get_stub_contents("blue_bank/transaction_page.json")
         account_id = "32"
         tink = Mock()
         date_until = datetime.strptime("2020-12-13", "%Y-%m-%d")
@@ -44,8 +44,8 @@ class TestApp:
             }
         ]
 
-    def test_iterating_and_fixing_transactions_for_another_bank(self):
-        stub_data = self._get_stub_contents("another_bank/transaction_page.json")
+    def test_iterating_and_fixing_transactions_for_red_bank(self):
+        stub_data = self._get_stub_contents("red_bank/transaction_page.json")
         account_id = "17"
         tink = Mock()
         date_until = datetime.strptime("2020-12-13", "%Y-%m-%d")
