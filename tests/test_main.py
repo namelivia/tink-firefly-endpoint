@@ -1,6 +1,6 @@
 import os
 import json
-from unittest.mock import Mock
+from unittest.mock import Mock, patch
 from datetime import datetime
 
 from app.utils.utils import (
@@ -25,9 +25,17 @@ class TestApp:
             data = humps.decamelize(json.load(stub_data))
             return DataclassMapper.map(TransactionsPage, data)
 
-    def test_iterating_and_fixing_transactions_for_blue_bank(self):
+    @patch("app.utils.fix_transactions.load_config")
+    def test_iterating_and_fixing_transactions_for_blue_bank(self, load_config_mock):
         stub_data = self._get_stub_contents("blue_bank/transaction_page.json")
-        account_id = "32"
+        load_config_mock.return_value = {
+            "account_middleware_mapping": {
+                "blue_account_id": "blue",
+                "red_account_id": "red",
+            }
+        }
+
+        account_id = "blue_account_id"
         tink = Mock()
         date_until = datetime.strptime("2020-12-13", "%Y-%m-%d")
         tink.transactions.return_value.get.return_value = stub_data
@@ -44,9 +52,17 @@ class TestApp:
             }
         ]
 
-    def test_iterating_and_fixing_transactions_for_red_bank(self):
+    @patch("app.utils.fix_transactions.load_config")
+    def test_iterating_and_fixing_transactions_for_red_bank(self, load_config_mock):
         stub_data = self._get_stub_contents("red_bank/transaction_page.json")
-        account_id = "17"
+        load_config_mock.return_value = {
+            "account_middleware_mapping": {
+                "blue_account_id": "blue",
+                "red_account_id": "red",
+            }
+        }
+
+        account_id = "red_account_id"
         tink = Mock()
         date_until = datetime.strptime("2020-12-13", "%Y-%m-%d")
         tink.transactions.return_value.get.return_value = stub_data
