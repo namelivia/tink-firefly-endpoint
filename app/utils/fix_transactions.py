@@ -2,6 +2,7 @@ from tink_http_python.transactions import Transactions
 from abc import ABC, abstractmethod
 from typing import Optional
 import yaml
+import os
 
 
 class AccountMiddleware(ABC):
@@ -56,9 +57,9 @@ MIDDLEWARE_KEYWORD_MAP = {
 
 def load_config():
     """Loads the configuration from a YAML file."""
-    config_path = "config.yaml"
+    config_path = os.environ.get("CONFIG_PATH")
     try:
-        with open(config_path, "r") as f:
+        with open(f"{config_path}/config.yaml", "r") as f:
             return yaml.safe_load(f)
     except FileNotFoundError:
         raise FileNotFoundError(f"Configuration file not found at {config_path}")
