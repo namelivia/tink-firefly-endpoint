@@ -3,18 +3,14 @@ import csv
 from app.summary.summary import Summary
 import logging
 from app.summary.summary import Summary
-from app.utils.fix_transactions import fix_transaction
+from app.utils.fix_transactions import get_account_middleware
 from datetime import datetime
 
 logger = logging.getLogger(__name__)
 
 
-def _get_transaction_date(transaction):
-    return datetime.strptime(transaction.dates.value, "%Y-%m-%d")
-
-
-def _date_before_target(transaction, target_date):
-    return _get_transaction_date(transaction) < target_date
+def _date_before_target(transaction_date, target_date):
+    return datetime.strptime(transaction_date, "%Y-%m-%d") < target_date
 
 
 def iterate_transactions(account_id, date_until, tink):
@@ -33,12 +29,14 @@ def iterate_transactions(account_id, date_until, tink):
 def _process_transactions_page(
     account_id, target_date, fixed_transactions, transactions_page
 ):
-    # This function will add transactions until either all of them are added or the
-    # target date is found.
+    middleware = get_account_middleware(account_id)
     for transaction in transactions_page.transactions:
-        if _date_before_target(transaction, target_date):
-            return True, fixed_transactions
-        fixed_transactions.append(fix_transaction(transaction))
+        fixed_transaction = middleware.fix_transaction(transaction)
+        if fixed_transaction is not None:
+            if _date_before_target(fixed_transaction["date"], target_date):
+                return True, fixed_transactions
+            else:
+                fixed_transactions.append(fixed_transaction)
     return False, fixed_transactions
 
 
