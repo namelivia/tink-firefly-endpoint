@@ -56,10 +56,15 @@ def write_configuration_file(account_id, output_path, timestamp):
         configuration_file.write(rendered_configuration)
 
 
-def check_account_balances(account_id, tink):
+def check_tink_account_balance(account_id, tink):
     accounts_page = tink.accounts().get()
     first_account_booked_balance = accounts_page.accounts[0].balances.booked
     return Accounts.calculate_real_amount(first_account_booked_balance.amount.value)
+
+
+def check_firefly_account_balance(account_id):
+    # TODO: Implement the logic to check the Firefly account balance
+    return None
 
 
 def save_transactions(account_id, fixed_transactions, output_path, current_timestamp):

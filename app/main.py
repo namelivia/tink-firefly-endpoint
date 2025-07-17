@@ -8,7 +8,8 @@ from app.utils.utils import (
     iterate_transactions,
     save_transactions,
     write_configuration_file,
-    check_account_balances,
+    check_tink_account_balance,
+    check_firefly_account_balances,
 )
 from tink_http_python.tink import Tink
 from tink_http_python.exceptions import NoAuthorizationCodeException
@@ -78,7 +79,7 @@ def read_root(
 
 
 @app.get("/check_balance")
-def read_root(
+def check_balances(
     code: str = Query(
         ..., title="Authorization Code", description="The authorization code"
     ),
@@ -99,7 +100,8 @@ def read_root(
         redirect_uri=os.environ.get("TINK_CALLBACK_URI"),
         storage=storage,
     )
-    check_account_balances(account_id, tink)
+    tink_balance = check_tink_account_balance(account_id, tink)
+    firefly_balance = check_firefly_account_balances(account_id)
 
 
 @app.get("/update")
