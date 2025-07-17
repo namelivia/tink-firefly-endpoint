@@ -5,6 +5,7 @@ import logging
 from app.summary.summary import Summary
 from app.utils.fix_transactions import get_account_middleware
 from datetime import datetime
+from tink_http_python.accounts import Accounts
 
 logger = logging.getLogger(__name__)
 
@@ -53,6 +54,12 @@ def write_configuration_file(account_id, output_path, timestamp):
     )
     with open(configuration_file_name, "w") as configuration_file:
         configuration_file.write(rendered_configuration)
+
+
+def check_account_balances(account_id, tink):
+    accounts_page = tink.accounts().get()
+    first_account_booked_balance = accounts_page.accounts[0].balances.booked
+    return Accounts.calculate_real_amount(first_account_booked_balance.amount.value)
 
 
 def save_transactions(account_id, fixed_transactions, output_path, current_timestamp):

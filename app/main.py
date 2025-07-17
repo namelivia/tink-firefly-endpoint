@@ -8,6 +8,7 @@ from app.utils.utils import (
     iterate_transactions,
     save_transactions,
     write_configuration_file,
+    check_account_balances,
 )
 from tink_http_python.tink import Tink
 from tink_http_python.exceptions import NoAuthorizationCodeException
@@ -74,6 +75,31 @@ def read_root(
     save_transactions(account_id, fixed_transactions, output_path, current_timestamp)
     write_configuration_file(account_id, output_path, current_timestamp)
     return {"Status": "OK", "Summary": Summary().get()}
+
+
+@app.get("/check_balance")
+def read_root(
+    code: str = Query(
+        ..., title="Authorization Code", description="The authorization code"
+    ),
+    account_id: str = Cookie(default=None),
+):
+    # Validate input is correct
+    if account_id is None:
+        raise HTTPException(status_code=400, detail="account_id cookie not found")
+
+    # Store the authorization code
+    storage = TokenStorage()
+    storage.store_new_authorization_code(code)
+
+    # Initialize the API
+    tink = Tink(
+        client_id=os.environ.get("TINK_CLIENT_ID"),
+        client_secret=os.environ.get("TINK_CLIENT_SECRET"),
+        redirect_uri=os.environ.get("TINK_CALLBACK_URI"),
+        storage=storage,
+    )
+    check_account_balances(account_id, tink)
 
 
 @app.get("/update")
