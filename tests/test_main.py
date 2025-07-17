@@ -5,29 +5,27 @@ from datetime import datetime
 
 from app.utils.utils import (
     iterate_transactions,
+    check_account_balances,
 )
 from app.summary.summary import Summary
 from dataclass_map_and_log.mapper import DataclassMapper
 from tink_python_api_types.transaction import TransactionsPage
+from tink_python_api_types.account import AccountsPage
 import humps
-
-mock_transaction = mock_transaction = type(
-    "Transaction",
-    (object,),
-    {"dates": type("Dates", (object,), {"value": "2023-10-01"}), "identifiers": None},
-)()
 
 
 class TestApp:
-    def _get_stub_contents(self, stub_name):
+    def _get_stub_contents(self, stub_name, class_name):
         path = os.path.join(os.path.dirname(__file__), "./stubs/")
         with open(path + stub_name) as stub_data:
             data = humps.decamelize(json.load(stub_data))
-            return DataclassMapper.map(TransactionsPage, data)
+            return DataclassMapper.map(class_name, data)
 
     @patch("app.utils.fix_transactions.load_config")
     def test_iterating_and_fixing_transactions_for_blue_bank(self, load_config_mock):
-        stub_data = self._get_stub_contents("blue_bank/transaction_page.json")
+        stub_data = self._get_stub_contents(
+            "blue_bank/transaction_page.json", TransactionsPage
+        )
         load_config_mock.return_value = {
             "account_middleware_mapping": {
                 "blue_account_id": "blue",
@@ -54,7 +52,9 @@ class TestApp:
 
     @patch("app.utils.fix_transactions.load_config")
     def test_iterating_and_fixing_transactions_for_red_bank(self, load_config_mock):
-        stub_data = self._get_stub_contents("red_bank/transaction_page.json")
+        stub_data = self._get_stub_contents(
+            "red_bank/transaction_page.json", TransactionsPage
+        )
         load_config_mock.return_value = {
             "account_middleware_mapping": {
                 "blue_account_id": "blue",
@@ -78,3 +78,13 @@ class TestApp:
                 "provider_transaction_id": "d8f37f7d19c240abb4ef5d5dbebae4ef",
             }
         ]
+
+    def test_check_checking_the_account_balances(self):
+        tink = Mock()
+        stub_data = self._get_stub_contents("accounts.json", AccountsPage)
+        tink.accounts.return_value.get.return_value = stub_data
+
+        account_id = "account_id"
+        balance = check_account_balances(account_id, tink)
+        assert balance == 19000.0
+        tink.accounts.return_value.get.assert_called_once_with()
