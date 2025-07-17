@@ -5,7 +5,8 @@ from datetime import datetime
 
 from app.utils.utils import (
     iterate_transactions,
-    check_account_balances,
+    check_tink_account_balance,
+    check_firefly_account_balance,
 )
 from app.summary.summary import Summary
 from dataclass_map_and_log.mapper import DataclassMapper
@@ -15,15 +16,20 @@ import humps
 
 
 class TestApp:
-    def _get_stub_contents(self, stub_name, class_name):
-        path = os.path.join(os.path.dirname(__file__), "./stubs/")
+    def _get_tink_stub_contents(self, stub_name, class_name):
+        path = os.path.join(os.path.dirname(__file__), "./stubs/tink/")
         with open(path + stub_name) as stub_data:
             data = humps.decamelize(json.load(stub_data))
             return DataclassMapper.map(class_name, data)
 
+    def _get_firefly_stub_contents(self, stub_name):
+        path = os.path.join(os.path.dirname(__file__), "./stubs/firefly/")
+        with open(path + stub_name) as stub_data:
+            return json.load(stub_data)
+
     @patch("app.utils.fix_transactions.load_config")
     def test_iterating_and_fixing_transactions_for_blue_bank(self, load_config_mock):
-        stub_data = self._get_stub_contents(
+        stub_data = self._get_tink_stub_contents(
             "blue_bank/transaction_page.json", TransactionsPage
         )
         load_config_mock.return_value = {
@@ -52,7 +58,7 @@ class TestApp:
 
     @patch("app.utils.fix_transactions.load_config")
     def test_iterating_and_fixing_transactions_for_red_bank(self, load_config_mock):
-        stub_data = self._get_stub_contents(
+        stub_data = self._get_tink_stub_contents(
             "red_bank/transaction_page.json", TransactionsPage
         )
         load_config_mock.return_value = {
@@ -79,12 +85,21 @@ class TestApp:
             }
         ]
 
-    def test_check_checking_the_account_balances(self):
+    def test_check_checking_the_tink_account_balance(self):
         tink = Mock()
-        stub_data = self._get_stub_contents("accounts.json", AccountsPage)
+        stub_data = self._get_tink_stub_contents("accounts.json", AccountsPage)
         tink.accounts.return_value.get.return_value = stub_data
 
         account_id = "account_id"
-        balance = check_account_balances(account_id, tink)
+        balance = check_tink_account_balance(account_id, tink)
         assert balance == 19000.0
         tink.accounts.return_value.get.assert_called_once_with()
+
+    def test_checking_the_firefly_account_balance(self):
+        firefly = Mock()
+        stub_data = self._get_firefly_stub_contents("account.json")
+        firefly.get_account_balance.return_value = stub_data
+
+        account_id = "account_id"
+        balance = check_firefly_account_balance(account_id)
+        assert balance is None  # The function is not yet implemented
