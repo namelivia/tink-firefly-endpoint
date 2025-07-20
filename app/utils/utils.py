@@ -1,4 +1,5 @@
 from jinja2 import Template
+import os
 import csv
 from app.summary.summary import Summary
 import logging
@@ -66,10 +67,11 @@ def check_tink_account_balance(account_id, tink):
 def check_firefly_account_balance(account_id):
     # If a date is passed, firefly will return the balance at
     # that date. But this is not possible with Tink.
-    FIREFLY_HOST = "https://firefly-iii.example.com"
-    url = f"{FIREFLY_HOST}/api/v1/accounts/{account_id}"
+    firefly_url = os.getenv("FIREFLY_URL")
+    firefly_api_token = os.getenv("FIREFLY_API_TOKEN")
+    url = f"{firefly_url}/api/v1/accounts/{account_id}"
     headers = {
-        "Authorization": "Bearer YOUR_API_TOKEN",
+        "Authorization": f"Bearer {firefly_api_token}",
         "Accept": "application/json",
     }
     response = requests.get(url, headers=headers)

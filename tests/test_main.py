@@ -86,7 +86,9 @@ class TestApp:
         ]
 
     @patch("app.utils.utils.requests")
-    def test_check_checking_the_tink_account_balance(self, mock_requests):
+    def test_check_checking_the_firefly_account_balance(self, mock_requests):
+        os.environ["FIREFLY_URL"] = "https://firefly-iii.example.com"
+        os.environ["FIREFLY_API_TOKEN"] = "YOUR_API_TOKEN"
         stub_data = self._get_firefly_stub_contents("account.json")
         mock_requests.get.return_value.json.return_value = stub_data
         mock_requests.get.return_value.status_code = 200
@@ -100,3 +102,12 @@ class TestApp:
             },
         )
         assert balance == 123.45
+
+    def test_check_checking_the_tink_account_balance(self):
+        tink = Mock()
+        stub_data = self._get_tink_stub_contents("accounts.json", AccountsPage)
+        tink.accounts.return_value.get.return_value = stub_data
+        account_id = "account_id"
+        balance = check_tink_account_balance(account_id, tink)
+        assert balance == 19000.0
+        tink.accounts.return_value.get.assert_called_once_with()
