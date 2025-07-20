@@ -1,10 +1,13 @@
 from jinja2 import Template
+import os
 import csv
 from app.summary.summary import Summary
 import logging
 from app.summary.summary import Summary
 from app.utils.fix_transactions import get_account_middleware
 from datetime import datetime
+from tink_http_python.accounts import Accounts
+import requests
 
 logger = logging.getLogger(__name__)
 
@@ -53,6 +56,33 @@ def write_configuration_file(account_id, output_path, timestamp):
     )
     with open(configuration_file_name, "w") as configuration_file:
         configuration_file.write(rendered_configuration)
+
+
+def check_tink_account_balance(account_id, tink):
+    accounts_page = tink.accounts().get()
+    first_account_booked_balance = accounts_page.accounts[0].balances.booked
+    return Accounts.calculate_real_amount(first_account_booked_balance.amount.value)
+
+
+def check_firefly_account_balance(account_id):
+    # If a date is passed, firefly will return the balance at
+    # that date. But this is not possible with Tink.
+    firefly_url = os.getenv("FIREFLY_URL")
+    firefly_api_token = os.getenv("FIREFLY_API_TOKEN")
+    url = f"{firefly_url}/api/v1/accounts/{account_id}"
+    headers = {
+        "Authorization": f"Bearer {firefly_api_token}",
+        "Accept": "application/json",
+    }
+    response = requests.get(url, headers=headers)
+    if response.status_code == 200:
+        data = response.json()
+        return float(data["data"]["attributes"]["current_balance"])
+    else:
+        logger.error(
+            f"Failed to fetch balance for account {account_id}: {response.text}"
+        )
+        return None
 
 
 def save_transactions(account_id, fixed_transactions, output_path, current_timestamp):
