@@ -68,7 +68,7 @@ def check_firefly_account_balance(account_id):
     # If a date is passed, firefly will return the balance at
     # that date. But this is not possible with Tink.
     firefly_url = os.getenv("FIREFLY_URL")
-    firefly_api_token = os.getenv("FIREFLY_API_TOKEN")
+    firefly_api_token = os.getenv("FIREFLY_PERSONAL_ACCESS_TOKEN")
     url = f"{firefly_url}/api/v1/accounts/{account_id}"
     headers = {
         "Authorization": f"Bearer {firefly_api_token}",

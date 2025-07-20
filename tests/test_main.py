@@ -88,7 +88,7 @@ class TestApp:
     @patch("app.utils.utils.requests")
     def test_check_checking_the_firefly_account_balance(self, mock_requests):
         os.environ["FIREFLY_URL"] = "https://firefly-iii.example.com"
-        os.environ["FIREFLY_API_TOKEN"] = "YOUR_API_TOKEN"
+        os.environ["FIREFLY_PERSONAL_ACCESS_TOKEN"] = "YOUR_API_TOKEN"
         stub_data = self._get_firefly_stub_contents("account.json")
         mock_requests.get.return_value.json.return_value = stub_data
         mock_requests.get.return_value.status_code = 200
