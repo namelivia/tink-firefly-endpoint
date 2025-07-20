@@ -102,6 +102,13 @@ def check_balances(
     )
     tink_balance = check_tink_account_balance(account_id, tink)
     firefly_balance = check_firefly_account_balances(account_id)
+    difference = tink_balance - firefly_balance
+    return {
+        "Status": "OK",
+        "Tink Balance": tink_balance,
+        "Firefly Balance": firefly_balance,
+        "Difference": difference,
+    }
 
 
 @app.get("/update")
