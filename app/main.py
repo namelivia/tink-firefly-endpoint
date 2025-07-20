@@ -9,7 +9,7 @@ from app.utils.utils import (
     save_transactions,
     write_configuration_file,
     check_tink_account_balance,
-    check_firefly_account_balances,
+    check_firefly_account_balance,
 )
 from tink_http_python.tink import Tink
 from tink_http_python.exceptions import NoAuthorizationCodeException
@@ -101,7 +101,7 @@ def check_balances(
         storage=storage,
     )
     tink_balance = check_tink_account_balance(account_id, tink)
-    firefly_balance = check_firefly_account_balances(account_id)
+    firefly_balance = check_firefly_account_balance(account_id)
     difference = tink_balance - firefly_balance
     return {
         "Status": "OK",
