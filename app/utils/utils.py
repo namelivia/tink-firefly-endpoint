@@ -6,6 +6,7 @@ from app.summary.summary import Summary
 from app.utils.fix_transactions import get_account_middleware
 from datetime import datetime
 from tink_http_python.accounts import Accounts
+import requests
 
 logger = logging.getLogger(__name__)
 
@@ -63,8 +64,23 @@ def check_tink_account_balance(account_id, tink):
 
 
 def check_firefly_account_balance(account_id):
-    # TODO: Implement the logic to check the Firefly account balance
-    return None
+    # If a date is passed, firefly will return the balance at
+    # that date. But this is not possible with Tink.
+    FIREFLY_HOST = "https://firefly-iii.example.com"
+    url = f"{FIREFLY_HOST}/api/v1/accounts/{account_id}"
+    headers = {
+        "Authorization": "Bearer YOUR_API_TOKEN",
+        "Accept": "application/json",
+    }
+    response = requests.get(url, headers=headers)
+    if response.status_code == 200:
+        data = response.json()
+        return float(data["data"]["attributes"]["current_balance"])
+    else:
+        logger.error(
+            f"Failed to fetch balance for account {account_id}: {response.text}"
+        )
+        return None
 
 
 def save_transactions(account_id, fixed_transactions, output_path, current_timestamp):

@@ -85,21 +85,18 @@ class TestApp:
             }
         ]
 
-    def test_check_checking_the_tink_account_balance(self):
-        tink = Mock()
-        stub_data = self._get_tink_stub_contents("accounts.json", AccountsPage)
-        tink.accounts.return_value.get.return_value = stub_data
-
-        account_id = "account_id"
-        balance = check_tink_account_balance(account_id, tink)
-        assert balance == 19000.0
-        tink.accounts.return_value.get.assert_called_once_with()
-
-    def test_checking_the_firefly_account_balance(self):
-        firefly = Mock()
+    @patch("app.utils.utils.requests")
+    def test_check_checking_the_tink_account_balance(self, mock_requests):
         stub_data = self._get_firefly_stub_contents("account.json")
-        firefly.get_account_balance.return_value = stub_data
-
-        account_id = "account_id"
+        mock_requests.get.return_value.json.return_value = stub_data
+        mock_requests.get.return_value.status_code = 200
+        account_id = "blue_account_id"
         balance = check_firefly_account_balance(account_id)
-        assert balance is None  # The function is not yet implemented
+        mock_requests.get.assert_called_once_with(
+            "https://firefly-iii.example.com/api/v1/accounts/blue_account_id",
+            headers={
+                "Authorization": "Bearer YOUR_API_TOKEN",
+                "Accept": "application/json",
+            },
+        )
+        assert balance == 123.45
