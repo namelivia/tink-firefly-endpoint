@@ -75,36 +75,12 @@ def read_root(
     fixed_transactions = iterate_transactions(account_id, formatted_date_until, tink)
     save_transactions(account_id, fixed_transactions, output_path, current_timestamp)
     write_configuration_file(account_id, output_path, current_timestamp)
-    return {"Status": "OK", "Summary": Summary().get()}
-
-
-@app.get("/check_balance")
-def check_balances(
-    code: str = Query(
-        ..., title="Authorization Code", description="The authorization code"
-    ),
-    account_id: str = Cookie(default=None),
-):
-    # Validate input is correct
-    if account_id is None:
-        raise HTTPException(status_code=400, detail="account_id cookie not found")
-
-    # Store the authorization code
-    storage = TokenStorage()
-    storage.store_new_authorization_code(code)
-
-    # Initialize the API
-    tink = Tink(
-        client_id=os.environ.get("TINK_CLIENT_ID"),
-        client_secret=os.environ.get("TINK_CLIENT_SECRET"),
-        redirect_uri=os.environ.get("TINK_CALLBACK_URI"),
-        storage=storage,
-    )
     tink_balance = check_tink_account_balance(account_id, tink)
     firefly_balance = check_firefly_account_balance(account_id)
     difference = tink_balance - firefly_balance
     return {
         "Status": "OK",
+        "Summary": Summary().get(),
         "Tink Balance": tink_balance,
         "Firefly Balance": firefly_balance,
         "Difference": difference,
