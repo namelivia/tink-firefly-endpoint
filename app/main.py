@@ -76,14 +76,10 @@ def read_root(
     save_transactions(account_id, fixed_transactions, output_path, current_timestamp)
     write_configuration_file(account_id, output_path, current_timestamp)
     tink_balance = check_tink_account_balance(account_id, tink)
-    firefly_balance = check_firefly_account_balance(account_id)
-    difference = tink_balance - firefly_balance
     return {
         "Status": "OK",
         "Summary": Summary().get(),
         "Tink Balance": tink_balance,
-        "Firefly Balance": firefly_balance,
-        "Difference": difference,
     }
 
 
