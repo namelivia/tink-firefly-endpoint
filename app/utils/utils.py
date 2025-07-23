@@ -43,6 +43,13 @@ def _process_transactions_page(
     return False, fixed_transactions
 
 
+def write_balance_file(account_id, balance, output_path, timestamp):
+    balance_file_name = f"{output_path}/balance_{timestamp}.csv"
+    with open(balance_file_name, "w") as balance_file:
+        balance_file.write("account_id,balance\n")
+        balance_file.write(f"{account_id},{balance}\n")
+
+
 def write_configuration_file(account_id, output_path, timestamp):
     configuration_file_name = f"{output_path}/output_{timestamp}.json"
     configuration_template_file_name = "templates/importer_configuration.json"

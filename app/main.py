@@ -8,6 +8,7 @@ from app.utils.utils import (
     iterate_transactions,
     save_transactions,
     write_configuration_file,
+    write_balance_file,
     check_tink_account_balance,
     check_firefly_account_balance,
 )
@@ -75,7 +76,9 @@ def read_root(
     fixed_transactions = iterate_transactions(account_id, formatted_date_until, tink)
     save_transactions(account_id, fixed_transactions, output_path, current_timestamp)
     write_configuration_file(account_id, output_path, current_timestamp)
+    # Write the balance file that will be used after the import
     tink_balance = check_tink_account_balance(account_id, tink)
+    write_balance_file(account_id, output_path, current_timestamp, tink_balance)
     return {
         "Status": "OK",
         "Summary": Summary().get(),
