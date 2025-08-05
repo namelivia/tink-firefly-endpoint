@@ -6,7 +6,7 @@ import logging
 logger = logging.getLogger(__name__)
 
 
-class Rediss:
+class Redis:
     @staticmethod
     def publish_new_import(output_path: str):
         r = redis.Redis(
