@@ -8,14 +8,14 @@ logger = logging.getLogger(__name__)
 
 class Redis:
     @staticmethod
-    def publish_new_import(output_path: str):
+    def publish_new_import(output_path: str, balance: str):
         r = redis.Redis(
             host=os.getenv("REDIS_HOST"),
             port=os.getenv("REDIS_PORT"),
             db=os.getenv("REDIS_DB"),
         )
 
-        import_data = {"output_path": output_path}
+        import_data = {"output_path": output_path, "balance": balance}
 
         try:
             message = json.dumps(import_data)

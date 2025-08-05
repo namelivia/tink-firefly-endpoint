@@ -43,13 +43,6 @@ def _process_transactions_page(
     return False, fixed_transactions
 
 
-def write_balance_file(account_id, balance, output_path, timestamp):
-    balance_file_name = f"{output_path}/balance_{timestamp}.csv"
-    with open(balance_file_name, "w") as balance_file:
-        balance_file.write("account_id,balance\n")
-        balance_file.write(f"{account_id},{balance}\n")
-
-
 def write_configuration_file(account_id, output_path, timestamp):
     configuration_file_name = f"{output_path}/output_{timestamp}.json"
     configuration_template_file_name = "templates/importer_configuration.json"
@@ -69,27 +62,6 @@ def check_tink_account_balance(account_id, tink):
     accounts_page = tink.accounts().get()
     first_account_booked_balance = accounts_page.accounts[0].balances.booked
     return Accounts.calculate_real_amount(first_account_booked_balance.amount.value)
-
-
-def check_firefly_account_balance(account_id):
-    # If a date is passed, firefly will return the balance at
-    # that date. But this is not possible with Tink.
-    firefly_url = os.getenv("FIREFLY_URL")
-    firefly_api_token = os.getenv("FIREFLY_PERSONAL_ACCESS_TOKEN")
-    url = f"{firefly_url}/api/v1/accounts/{account_id}"
-    headers = {
-        "Authorization": f"Bearer {firefly_api_token}",
-        "Accept": "application/json",
-    }
-    response = requests.get(url, headers=headers)
-    if response.status_code == 200:
-        data = response.json()
-        return float(data["data"]["attributes"]["current_balance"])
-    else:
-        logger.error(
-            f"Failed to fetch balance for account {account_id}: {response.text}"
-        )
-        return None
 
 
 def save_transactions(account_id, fixed_transactions, output_path, current_timestamp):

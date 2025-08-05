@@ -3,11 +3,7 @@ import json
 from unittest.mock import Mock, patch
 from datetime import datetime
 
-from app.utils.utils import (
-    iterate_transactions,
-    check_tink_account_balance,
-    check_firefly_account_balance,
-)
+from app.utils.utils import iterate_transactions, check_tink_account_balance
 from app.summary.summary import Summary
 from dataclass_map_and_log.mapper import DataclassMapper
 from tink_python_api_types.transaction import TransactionsPage
@@ -84,24 +80,6 @@ class TestApp:
                 "provider_transaction_id": "d8f37f7d19c240abb4ef5d5dbebae4ef",
             }
         ]
-
-    @patch("app.utils.utils.requests")
-    def test_check_checking_the_firefly_account_balance(self, mock_requests):
-        os.environ["FIREFLY_URL"] = "https://firefly-iii.example.com"
-        os.environ["FIREFLY_PERSONAL_ACCESS_TOKEN"] = "YOUR_API_TOKEN"
-        stub_data = self._get_firefly_stub_contents("account.json")
-        mock_requests.get.return_value.json.return_value = stub_data
-        mock_requests.get.return_value.status_code = 200
-        account_id = "blue_account_id"
-        balance = check_firefly_account_balance(account_id)
-        mock_requests.get.assert_called_once_with(
-            "https://firefly-iii.example.com/api/v1/accounts/blue_account_id",
-            headers={
-                "Authorization": "Bearer YOUR_API_TOKEN",
-                "Accept": "application/json",
-            },
-        )
-        assert balance == 123.45
 
     def test_check_checking_the_tink_account_balance(self):
         tink = Mock()

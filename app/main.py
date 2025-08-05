@@ -9,9 +9,7 @@ from app.utils.utils import (
     iterate_transactions,
     save_transactions,
     write_configuration_file,
-    write_balance_file,
     check_tink_account_balance,
-    check_firefly_account_balance,
 )
 from tink_http_python.tink import Tink
 from tink_http_python.exceptions import NoAuthorizationCodeException
@@ -79,8 +77,7 @@ def read_root(
     write_configuration_file(account_id, output_path, current_timestamp)
     # Write the balance file that will be used after the import
     tink_balance = check_tink_account_balance(account_id, tink)
-    write_balance_file(account_id, output_path, current_timestamp, tink_balance)
-    Redis.publish_new_import(f"{output_path}/output_{current_timestamp}")
+    Redis.publish_new_import(f"{output_path}/output_{current_timestamp}", tink_balance)
     return {
         "Status": "OK",
         "Summary": Summary().get(),
