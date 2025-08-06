@@ -77,7 +77,9 @@ def read_root(
     write_configuration_file(account_id, output_path, current_timestamp)
     # Write the balance file that will be used after the import
     tink_balance = check_tink_account_balance(account_id, tink)
-    Redis.publish_new_import(f"{output_path}/output_{current_timestamp}", tink_balance)
+    Redis.publish_new_import(
+        f"{output_path}/output_{current_timestamp}", tink_balance, account_id
+    )
     return {
         "Status": "OK",
         "Summary": Summary().get(),
