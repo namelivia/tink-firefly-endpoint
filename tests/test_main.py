@@ -81,11 +81,40 @@ class TestApp:
             }
         ]
 
-    def test_check_checking_the_tink_account_balance(self):
+    @patch("app.utils.fix_transactions.load_config")
+    def test_check_checking_the_tink_account_balance_for_red_bank(
+        self, load_config_mock
+    ):
         tink = Mock()
-        stub_data = self._get_tink_stub_contents("accounts.json", AccountsPage)
+        load_config_mock.return_value = {
+            "account_middleware_mapping": {
+                "blue_account_id": "blue",
+                "red_account_id": "red",
+            }
+        }
+        stub_data = self._get_tink_stub_contents("red_bank/accounts.json", AccountsPage)
         tink.accounts.return_value.get.return_value = stub_data
-        account_id = "account_id"
+        account_id = "red_account_id"
+        balance = check_tink_account_balance(account_id, tink)
+        assert balance == 19000.0
+        tink.accounts.return_value.get.assert_called_once_with()
+
+    @patch("app.utils.fix_transactions.load_config")
+    def test_check_checking_the_tink_account_balance_for_blue_bank(
+        self, load_config_mock
+    ):
+        tink = Mock()
+        load_config_mock.return_value = {
+            "account_middleware_mapping": {
+                "blue_account_id": "blue",
+                "red_account_id": "red",
+            }
+        }
+        stub_data = self._get_tink_stub_contents(
+            "blue_bank/accounts.json", AccountsPage
+        )
+        tink.accounts.return_value.get.return_value = stub_data
+        account_id = "blue_account_id"
         balance = check_tink_account_balance(account_id, tink)
         assert balance == 19000.0
         tink.accounts.return_value.get.assert_called_once_with()

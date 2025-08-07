@@ -10,6 +10,10 @@ class AccountMiddleware(ABC):
     def fix_transaction(self, transaction) -> Optional[dict]:
         pass
 
+    @abstractmethod
+    def fix_account(self, account) -> Optional[dict]:
+        pass
+
 
 class BlueAccountMiddleware(AccountMiddleware):
     def _get_provider_transaction_id(self, transaction):
@@ -26,6 +30,9 @@ class BlueAccountMiddleware(AccountMiddleware):
             "provider_transaction_id": self._get_provider_transaction_id(transaction),
         }
         return fixed_transaction
+
+    def fix_account(self, account):
+        return account
 
 
 class RedAccountMiddleware(AccountMiddleware):
@@ -47,6 +54,11 @@ class RedAccountMiddleware(AccountMiddleware):
             "provider_transaction_id": self._get_provider_transaction_id(transaction),
         }
         return fixed_transaction
+
+    def fix_account(self, account):
+        if account.type != "CHECKING":
+            return None
+        return account
 
 
 MIDDLEWARE_KEYWORD_MAP = {

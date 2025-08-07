@@ -59,8 +59,15 @@ def write_configuration_file(account_id, output_path, timestamp):
 
 
 def check_tink_account_balance(account_id, tink):
+    middleware = get_account_middleware(account_id)
     accounts_page = tink.accounts().get()
-    first_account_booked_balance = accounts_page.accounts[0].balances.booked
+    fixed_accounts = []
+    for account in accounts_page.accounts:
+        fixed_account = middleware.fix_account(account)
+        if fixed_account is not None:
+            fixed_accounts.append(fixed_account)
+    # Just picking the first account
+    first_account_booked_balance = fixed_accounts[0].balances.booked
     return Accounts.calculate_real_amount(first_account_booked_balance.amount.value)
 
 
