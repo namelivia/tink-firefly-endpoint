@@ -23,7 +23,7 @@ pytest-cov = "^6.2.1"
 pudb = "^2025.1"
 codecov = "^2.1.13"
 black = "^25.1.0"
-pre-commit = "^4.2.0"
+pre-commit = "^4.3.0"
 mock = "^5.2.0"
 
 [tool.poetry.scripts]
