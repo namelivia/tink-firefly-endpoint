@@ -26,6 +26,10 @@ def iterate_transactions(account_id, date_until, tink):
             account_id, date_until, fixed_transactions, transactions_page
         )
         page = transactions_page.next_page_token
+        logger.info(f"Next page to be queried is {page}")
+        # There are no more pages and the date wasn't found
+        if not stop and page is None:
+            stop = True
     return fixed_transactions
 
 
