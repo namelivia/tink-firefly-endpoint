@@ -19,7 +19,7 @@ redis = "^6.4.0"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^8.4.2"
-pytest-cov = "^6.2.1"
+pytest-cov = "^7.0.0"
 pudb = "^2025.1"
 codecov = "^2.1.13"
 black = "^25.1.0"
