@@ -1,2 +1,0 @@
-#!/bin/bash
-docker exec -e PYTHONPATH=. tink-firefly-endpoint poetry run scheduler
